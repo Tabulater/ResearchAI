@@ -1,22 +1,28 @@
 import { useState } from 'react';
-import { Atom, Database, Settings, AlertTriangle, Home } from 'lucide-react';
-import { RealSearchInterface } from './components/RealSearchInterface';
-import { RealMaterialPredictor } from './components/RealMaterialPredictor';
-import { RealInsightsGenerator } from './components/RealInsightsGenerator';
-import { PaperResults } from './components/PaperResults';
+import { Atom, Database, Settings, Home } from 'lucide-react';
+import { ThemeToggle } from './lib/components/ThemeToggle';
 import { LandingPage } from './components/LandingPage';
-import { ThemeToggle } from './components/ThemeToggle';
-import { ResearchChat } from './components/ResearchChat';
+import { SearchInterface } from './features/search';
+import { MaterialPredictor } from './features/materials';
+import { InsightsGenerator } from './features/insights';
+import { ResearchChat } from './features/chat';
 
 const App = () => {
   const [activeTab, setActiveTab] = useState('home');
   const [searchResults, setSearchResults] = useState<any[]>([]);
 
-  // Navigation bar removed; tabs list no longer needed
-
   const handleSearchResults = (results: any[]) => {
     setSearchResults(results);
   };
+  
+  // Navigation items
+  const navItems = [
+    { id: 'home', label: 'Home', icon: <Home className="h-5 w-5" /> },
+    { id: 'search', label: 'Search Papers', icon: <Database className="h-5 w-5" /> },
+    { id: 'materials', label: 'Materials', icon: <Atom className="h-5 w-5" /> },
+    { id: 'chat', label: 'Research Chat', icon: <MessageSquare className="h-5 w-5" /> },
+    { id: 'insights', label: 'Insights', icon: <Lightbulb className="h-5 w-5" /> },
+  ];
 
   const renderContent = () => {
     switch (activeTab) {
@@ -25,19 +31,162 @@ const App = () => {
       case 'search':
         return (
           <div className="space-y-6">
-            <RealSearchInterface onResults={handleSearchResults} />
-            {searchResults.length > 0 && <PaperResults papers={searchResults} />}
+            <SearchInterface onResults={handleSearchResults} />
+            {searchResults.length > 0 && (
+              <div className="mt-6">
+                <h2 className="text-xl font-semibold mb-4">Search Results</h2>
+                <PaperResults papers={searchResults} />
+              </div>
+            )}
           </div>
         );
-      
       case 'materials':
-        return <RealMaterialPredictor />;
+        return (
+          <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex">
+            {/* Sidebar */}
+            <aside className="w-64 bg-white dark:bg-gray-800 shadow-lg hidden md:block">
+              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center space-x-3">
+                  <Atom className="h-8 w-8 text-blue-600" />
+                  <h1 className="text-xl font-bold">ResearchAI</h1>
+                </div>
+              </div>
+              <nav className="p-4 space-y-2">
+                {navItems.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    className={`w-full flex items-center space-x-3 px-4 py-2 rounded-lg transition-colors ${
+                      activeTab === item.id
+                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-100'
+                        : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                    }`}
+                  >
+                    {item.icon}
+                    <span>{item.label}</span>
+                  </button>
+                ))}
+              </nav>
+            </aside>
+
+            {/* Main Content */}
+            <div className="flex-1 flex flex-col">
+              <header className="bg-white dark:bg-gray-800 shadow-sm">
+                <div className="px-4 sm:px-6 py-4 flex justify-between items-center">
+                  <h1 className="text-xl font-semibold">
+                    {navItems.find((item) => item.id === activeTab)?.label || 'ResearchAI'}
+                  </h1>
+                  <div className="flex items-center space-x-4">
+                    <ThemeToggle />
+                  </div>
+                </div>
+              </header>
+              <main className="flex-1 p-4 sm:p-6 overflow-auto">
+                <div className="max-w-6xl mx-auto">
+                  <MaterialPredictor />
+                </div>
+              </main>
+            </div>
+          </div>
+        );
       case 'chat':
-        return <ResearchChat />;
-      
+        return (
+          <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex">
+            {/* Sidebar */}
+            <aside className="w-64 bg-white dark:bg-gray-800 shadow-lg hidden md:block">
+              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center space-x-3">
+                  <Atom className="h-8 w-8 text-blue-600" />
+                  <h1 className="text-xl font-bold">ResearchAI</h1>
+                </div>
+              </div>
+              <nav className="p-4 space-y-2">
+                {navItems.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    className={`w-full flex items-center space-x-3 px-4 py-2 rounded-lg transition-colors ${
+                      activeTab === item.id
+                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-100'
+                        : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                    }`}
+                  >
+                    {item.icon}
+                    <span>{item.label}</span>
+                  </button>
+                ))}
+              </nav>
+            </aside>
+
+            {/* Main Content */}
+            <div className="flex-1 flex flex-col">
+              <header className="bg-white dark:bg-gray-800 shadow-sm">
+                <div className="px-4 sm:px-6 py-4 flex justify-between items-center">
+                  <h1 className="text-xl font-semibold">
+                    {navItems.find((item) => item.id === activeTab)?.label || 'ResearchAI'}
+                  </h1>
+                  <div className="flex items-center space-x-4">
+                    <ThemeToggle />
+                  </div>
+                </div>
+              </header>
+              <main className="flex-1 p-4 sm:p-6 overflow-auto">
+                <div className="max-w-6xl mx-auto">
+                  <ResearchChat />
+                </div>
+              </main>
+            </div>
+          </div>
+        );
       case 'insights':
-        return <RealInsightsGenerator papers={searchResults} />;
-      
+        return (
+          <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex">
+            {/* Sidebar */}
+            <aside className="w-64 bg-white dark:bg-gray-800 shadow-lg hidden md:block">
+              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center space-x-3">
+                  <Atom className="h-8 w-8 text-blue-600" />
+                  <h1 className="text-xl font-bold">ResearchAI</h1>
+                </div>
+              </div>
+              <nav className="p-4 space-y-2">
+                {navItems.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    className={`w-full flex items-center space-x-3 px-4 py-2 rounded-lg transition-colors ${
+                      activeTab === item.id
+                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-100'
+                        : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                    }`}
+                  >
+                    {item.icon}
+                    <span>{item.label}</span>
+                  </button>
+                ))}
+              </nav>
+            </aside>
+
+            {/* Main Content */}
+            <div className="flex-1 flex flex-col">
+              <header className="bg-white dark:bg-gray-800 shadow-sm">
+                <div className="px-4 sm:px-6 py-4 flex justify-between items-center">
+                  <h1 className="text-xl font-semibold">
+                    {navItems.find((item) => item.id === activeTab)?.label || 'ResearchAI'}
+                  </h1>
+                  <div className="flex items-center space-x-4">
+                    <ThemeToggle />
+                  </div>
+                </div>
+              </header>
+              <main className="flex-1 p-4 sm:p-6 overflow-auto">
+                <div className="max-w-6xl mx-auto">
+                  <InsightsGenerator papers={searchResults} />
+                </div>
+              </main>
+            </div>
+          </div>
+        );
       case 'config':
         return (
           <div className="bg-white rounded-xl shadow-lg p-6">
@@ -122,7 +271,6 @@ const App = () => {
             </div>
           </div>
         );
-      
       default:
         return null;
     }
