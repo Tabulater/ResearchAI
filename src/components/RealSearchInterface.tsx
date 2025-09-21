@@ -12,12 +12,25 @@ export const RealSearchInterface: React.FC<RealSearchInterfaceProps> = ({ onResu
   const [searchSource, setSearchSource] = useState<'arxiv' | 'semantic' | 'crossref'>('arxiv');
   const [error, setError] = useState<string | null>(null);
   const [lastSearchInfo, setLastSearchInfo] = useState<string | null>(null);
+  const [searchProgress, setSearchProgress] = useState<number>(0);
 
   const handleSearch = async () => {
     if (!query.trim()) return;
     
     setIsSearching(true);
     setError(null);
+    setSearchProgress(0);
+    
+    // Simulate progress for better UX
+    const progressInterval = setInterval(() => {
+      setSearchProgress(prev => {
+        if (prev >= 90) {
+          clearInterval(progressInterval);
+          return 90; // Don't go to 100% until the actual search completes
+        }
+        return prev + 10;
+      });
+    }, 300);
     setLastSearchInfo(null);
 
     try {
@@ -31,6 +44,20 @@ export const RealSearchInterface: React.FC<RealSearchInterfaceProps> = ({ onResu
         case 'semantic':
           results = await realApiService.searchSemanticScholar(query, 20);
           setLastSearchInfo(`Searched Semantic Scholar for "${query}"`);
+          clearInterval(progressInterval);
+          setSearchProgress(100);
+          
+          // Small delay to show 100% before hiding the progress
+          await new Promise(resolve => setTimeout(resolve, 300));
+          
+          setIsSearching(false);
+          if (results && results.length) {
+            onResults(results);
+            setLastSearchInfo(`Found ${results.length} papers for "${query}"`);
+          }
+          
+          // Reset progress after completion
+          setTimeout(() => setSearchProgress(0), 500);
           break;
         case 'crossref':
           results = await realApiService.searchCrossRef(query, 20);
@@ -69,6 +96,16 @@ export const RealSearchInterface: React.FC<RealSearchInterfaceProps> = ({ onResu
       </div>
 
       <div className="space-y-4">
+        {/* Search Progress Bar */}
+        {isSearching && (
+          <div className="w-full bg-gray-200 rounded-full h-2.5">
+            <div 
+              className="bg-blue-600 h-2.5 rounded-full transition-all duration-300 ease-out"
+              style={{ width: `${searchProgress}%` }}
+            ></div>
+          </div>
+        )}
+        
         <div className="flex space-x-4">
           <div className="flex-1">
             <div className="relative">
@@ -96,15 +133,24 @@ export const RealSearchInterface: React.FC<RealSearchInterfaceProps> = ({ onResu
           
           <button
             onClick={handleSearch}
-            disabled={isSearching || !query.trim()}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+            disabled={isSearching}
+            className={`px-4 py-2 rounded-lg transition-all flex items-center space-x-2 ${
+              isSearching 
+                ? 'bg-blue-700 text-white' 
+                : 'bg-blue-600 text-white hover:bg-blue-700'
+            } disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 transition-transform`}
           >
             {isSearching ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Searching {searchProgress}%</span>
+              </>
             ) : (
-              <Search className="h-5 w-5" />
+              <>
+                <Search className="h-4 w-4" />
+                <span>Search</span>
+              </>
             )}
-            <span>{isSearching ? 'Searching...' : 'Search'}</span>
           </button>
         </div>
 
